@@ -49,7 +49,7 @@ A universal memory system for AI Agents built on **TiDB Community Edition 8.5+**
 # Using tiup playground (recommended for testing)
 tiup playground v8.5.6 --db 1 --pd 3 --kv 3 --tiflash 1
 
-# Or download from: https://pingkai.cn/docs/tidb/stable/
+# Or download from: https://pingkai.cn/download#tidb-community
 ```
 
 ### 2. Install Prerequisites
@@ -217,9 +217,9 @@ memory-tidb8-ce-by-yhw/
 
 ## Related Documentation
 
-- [TiDB CE Download](https://pingkai.cn/docs/tidb/stable/) — Community edition downloads
-- [TiDB Documentation](https://docs.pingcap.com/zh/tidb/v8.5/) — Official documentation
-- [TiFlash Overview](https://docs.pingcap.com/zh/tidb/v8.5/tiflash-overview) — Columnar storage features
+- [TiDB CE Download](https://pingkai.cn/download#tidb-community) — Community Edition download links
+- [TiDB Documentation](https://pingkai.cn/docs/tidb/stable/) — Official documentation entry point
+- [TiFlash Overview](https://pingkai.cn/docs/tidb/stable/tiflash-overview) — Columnar storage features
 
 ---
 

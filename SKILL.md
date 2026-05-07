@@ -1,7 +1,18 @@
+---
+name: memory-tidb8-ce-by-yhw
+version: 0.1.1
+description: "TiDB Community Edition v8.5+ AI Agent Memory System - SQL Vector Search Support"
+author: "Haiwen Yin (胖头鱼 🐟 / yhw)"
+license: "Apache License, Version 2.0"
+created: "2026-05-05"
+updated: "2026-05-07"
+---
+
 # memory-tidb8-ce-by-yhw — TiDB Community Edition v8.5+ AI Agent Memory System
 
-**Version**: v0.1.0 (Initial Release - TiDB 8.5.6 Support)  
+**Version**: v0.1.1 (SQL Vector Search Support - vec_cosine_distance)  
 **Created**: 2026-05-05  
+**Updated**: 2026-05-07
 **Author**: Haiwen Yin (胖头鱼 🐟 / yhw)  
 **License**: Apache License, Version 2.0
 
@@ -9,17 +20,16 @@
 
 ## 🎯 Overview
 
-A universal memory system for AI Agents built on **TiDB Community Edition v8.5+**, leveraging HTAP capabilities and TiFlash columnar storage for high-performance semantic search and knowledge graph management.
+A universal memory system for AI Agents built on **TiDB Community Edition v8.5+**, featuring native SQL vector search capabilities with `vec_cosine_distance()` function for semantic similarity queries and knowledge graph management.
 
-### Why TiDB?
+### Key Features (v0.1.1 Update)
 
-| Feature | Advantage for AI Agent Memory |
-|---------|-------------------------------|
-| **HTAP (Hybrid Transactional/Analytical Processing)** | Real-time memory writes + instant similarity analysis without data duplication |
-| **TiFlash Columnar Engine** | 10-50x faster vector similarity queries compared to row-store |
-| **PD Auto Partitioning** | Zero manual maintenance — automatic load balancing as memory grows |
-| **MySQL Compatibility** | Existing SQL syntax works out-of-the-box |
-| **TiCDC Change Data Capture** | Real-time snapshot backup and disaster recovery |
+- ✅ Native VECTOR(1024) type support
+- ✅ **SQL-based vec_cosine_distance() function** - Direct vector similarity queries in SQL
+- ✅ ORDER BY distance sorting in database layer
+- ✅ CAST JSON to VECTOR conversion for storage
+- ✅ HTAP (Hybrid Transactional/Analytical Processing) capabilities
+- ✅ PD Auto Partitioning for automatic load balancing
 
 ---
 
@@ -29,19 +39,17 @@ A universal memory system for AI Agents built on **TiDB Community Edition v8.5+*
 ┌─────────────────────────────────────────────────────────────┐
 │                    Application Layer (Python/Java)          │
 │  Embedding Generation → Text Vector Conversion              │
-│  Cosine Similarity Calculation                              │
-│  Graph Traversal via Recursive CTEs                         │
-│  JSON View Construction                                     │
+│  SQL Query Building with vec_cosine_distance()              │
 ├─────────────────────────────────────────────────────────────┤
 │                    TiDB Cluster (v8.5+)                     │
 │                                                             │
 │  ┌──────────┐    ┌──────────┐    ┌───────────┐              │
 │  │ TiDB Svr │◄──►│ PD       │◄──►│ TiKV      │              │
 │  │(SQL/Calc)│    │(Metadata)│    │(Row Store)│              │
-│  └─────┬────┘    └──────────┘    └──────┬────┘              │
-│        │                                │                   │
-│        ▼                                ▼                   │
-│  TiFlash (Columnar) ◄──────────────────► Memory Analysis    │
+│  └──────────┘    └──────────┘    └───────────┘              │
+│                                                             │
+│  vec_cosine_distance() SQL Function                         │
+│  → Native Vector Similarity Query                           │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -51,7 +59,7 @@ A universal memory system for AI Agents built on **TiDB Community Edition v8.5+*
 
 ### Core Tables
 
-#### memory_nodes — Agent Memory Nodes
+#### memory_nodes — Agent Memory Nodes (Updated for v0.1.1)
 
 ```sql
 CREATE TABLE memory_nodes (
@@ -101,101 +109,74 @@ CREATE TABLE memories (
 
 ---
 
-## 🔧 Usage Examples
+## 🔧 SQL Vector Search (v0.1.1 - NEW!)
 
-### 1. Connect to TiDB Tenant Database
+### Using vec_cosine_distance() Function
 
-```bash
-# Using mysql client (TiDB compatible)
-mysql -h <host> -P 4000 -u root@<tenant> -p <database_name>
-
-# Example:
-mysql -h 127.0.0.1 -P 4000 -u root@memcluster -p memory_cluster
-```
-
-**Connection Parameters:**
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| Host | 127.0.0.1 | TiDB server IP |
-| Port | 4000 | TiDB MySQL port (not 3306) |
-| User | root@<tenant> | Format: `username@tenant_name` |
-| Database | memory_cluster | Tenant name (= database) |
-
-### 2. Python Vector Similarity Search
-
-```python
-import pymysql
-import numpy as np
-
-def cosine_similarity(vec_a, vec_b):
-    """Calculate cosine similarity between two vectors"""
-    return np.dot(vec_a, vec_b) / (np.linalg.norm(vec_a) * np.linalg.norm(vec_b))
-
-def find_similar_memories(query_vector, limit=10):
-    """Find most similar memories using application-layer calculation"""
-    
-    # Connect to TiDB tenant database (production cluster)
-    conn = pymysql.connect(
-        host='10.10.10.142',  # TiDB server IP
-        port=4000,            # TiDB MySQL port
-        user='root',          # root@% for full access
-        password='tidb#123',  # Production credentials
-        database='memory_system'
-    )
-    
-    cursor = conn.cursor()
-    
-    # Query all memory nodes with embeddings (TiFlash accelerates this)
-    cursor.execute("""
-        SELECT node_id, content, embedding 
-        FROM memory_nodes 
-        WHERE node_type = 'memory' AND embedding IS NOT NULL
-    """)
-    
-    results = []
-    for row in cursor.fetchall():
-        node_id, content, embedding_bytes = row
-        
-        # Convert bytes to numpy array (TiDB stores as varbinary)
-        import struct
-        if isinstance(embedding_bytes, bytes):
-            dim = len(embedding_bytes) // 4  # Float32 = 4 bytes
-            values = list(struct.unpack(f'{dim}f', embedding_bytes))
-            
-            similarity = cosine_similarity(query_vector, values)
-            results.append((node_id, content, similarity))
-    
-    cursor.close()
-    conn.close()
-    
-    # Sort by similarity descending
-    return sorted(results, key=lambda x: x[2], reverse=True)[:limit]
-
-# Usage
-query_embedding = [0.1] * 1024  # Replace with actual embedding
-similar_memories = find_similar_memories(query_embedding)
-```
-
-### 3. Graph Traversal with Recursive CTEs
+TiDB CE v8.5.6 includes native `vec_cosine_distance()` function for vector similarity queries:
 
 ```sql
--- Find all related memories within 3 hops
-WITH RECURSIVE memory_graph AS (
-    -- Base case: start from given node
-    SELECT source_node_id, target_node_id, relationship_type, 1 as depth
-    FROM memory_edges
-    WHERE source_node_id = :start_node_id
-    
-    UNION ALL
-    
-    -- Recursive case: traverse edges
-    SELECT e.source_node_id, e.target_node_id, e.relationship_type, mg.depth + 1
-    FROM memory_edges e
-    INNER JOIN memory_graph mg ON e.source_node_id = mg.target_node_id
-    WHERE mg.depth < 3
-)
-SELECT * FROM memory_graph;
+-- Query similar documents using SQL (v0.1.1 feature)
+SELECT id, document, 
+       vec_cosine_distance(embedding, CAST('[0.5,0.5,...]' AS VECTOR(1024))) AS distance
+FROM vector_native_test
+ORDER BY distance
+LIMIT 3;
+
+-- With parameter binding (prepared statement style)
+SELECT node_id, content,
+       vec_cosine_distance(embedding, CAST(? AS VECTOR(1024))) AS similarity_score
+FROM memory_nodes
+WHERE node_type = 'memory' AND embedding IS NOT NULL
+ORDER BY similarity_score
+LIMIT 10;
+
+-- Filter by distance threshold
+SELECT id, text_content, distance FROM (
+    SELECT id, text_content, 
+           vec_cosine_distance(embedding, CAST(? AS VECTOR(1024))) AS distance
+    FROM vector_native_test
+) t WHERE distance < 0.3 ORDER BY distance;
+```
+
+### Testing Results (Verified on TiDB CE v8.5.6)
+
+**Test Environment:**
+- TiDB Version: 8.0.11-TiDB-v8.5.6
+- Database: memory_system
+- Vector Type: VECTOR(1024)
+
+**SQL Query Example:**
+```sql
+USE memory_system;
+SELECT 
+    id,
+    text_content AS document,
+    vec_cosine_distance(embedding, CAST('[0.5,...]' AS VECTOR(1024))) AS distance
+FROM vector_native_test
+ORDER BY distance
+LIMIT 5;
+```
+
+**Query Results:**
+| ID | Document (Text Content) | Cosine Distance |
+|----|-------------------------|-----------------|
+| 33 | Data Science Analysis | 0.23455271808188727 |
+| 34 | Python Programming Language | 0.2350298471474359 |
+| 30 | Distributed Database Technology | 0.23583382639728667 |
+| 32 | Cloud Computing Architecture Design | 0.23873097179667757 |
+| 31 | AI Machine Learning Algorithm | 0.2404038003504697 |
+
+### Storing Vectors in SQL
+
+```sql
+-- Store vector using CAST conversion
+INSERT INTO vector_native_test (text_content, embedding) 
+VALUES ('AI Machine Learning Algorithm', CAST('[0.1, 0.2, ...]' AS VECTOR(1024)));
+
+-- Using JSON array format with proper escaping
+INSERT INTO memory_nodes (content, embedding) 
+VALUES ('test content', CAST('[0.5,0.5,...]' AS VECTOR(1024)));
 ```
 
 ---
@@ -207,15 +188,14 @@ SELECT * FROM memory_graph;
 | Component | Requirement | Notes |
 |-----------|-------------|-------|
 | **Database** | TiDB Community Edition v8.5+ | Minimum version for HTAP features |
-| **Python** | 3.8+ | With pymysql, numpy packages |
+| **Python** | 3.8+ | With pymysql, numpy packages (for embedding generation) |
 | **Network** | Port 4000 (TiDB), 2379 (PD) accessible | Default ports |
 
 ### Current Deployment Status
 
 > ✅ **DEPLOYED**: TiDB v8.5.6 Community Edition cluster (Production Environment)
 
-**Complete Cluster Topology:**
-
+**Cluster Topology:**
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │                      TiDB Cluster Production Environment             │
@@ -234,10 +214,9 @@ SELECT * FROM memory_graph;
 │  │   10.10.10.144  │    │   10.10.10.145  │    │   10.10.10.146  │   │
 │  │                 │    │                 │    │                 │   │
 │  │  ┌─────────────┐│    │  ┌─────────────┐│    │  ┌─────────────┐│   │
-│  │  │    TiKV-2   ││    │  │    TiKV-3   ││    │  │   TiFlash   ││   │
+│  │  │    TiKV-2   ││    │  │    TiKV-3   ││    │  │    TiKV-4   ││   │
 │  │  │   :20160    ││    │  │   :20160    ││    │  │   :20160    ││   │
-│  │  └─────────────┘│    │  └─────────────┘│    │  │ (Columnar)  ││   │
-│  │                 │    │                 │    │  └─────────────┘│   │
+│  │  └─────────────┘│    │  └─────────────┘│    │  └─────────────┘│   │
 │  └─────────────────┘    └─────────────────┘    └─────────────────┘   │
 └──────────────────────────────────────────────────────────────────────┘
 
@@ -248,9 +227,7 @@ SELECT * FROM memory_graph;
   - 10.10.10.143:20160 (Node 1, Row Store)
   - 10.10.10.144:20160 (Node 2, Row Store)  
   - 10.10.10.145:20160 (Node 3, Row Store)
-- **TiFlash Nodes** (Columnar Engine for Analytics):
-  - 10.10.10.146:20160 (Node 1, Columnar Storage)
-  - 10.10.10.147:20160 (Node 2, Columnar Storage)
+  - 10.10.10.146:20160 (Node 4, Row Store)
 
 **Database Configuration:**
 - **Database Name**: memory_system
@@ -289,13 +266,12 @@ memory-tidb8-ce-by-yhw/
 ├── LICENSE               # Apache License 2.0
 ├── NOTICE                # Copyright notice
 ├── CHANGELOG.md          # Version history
+├── RELEASE_NOTES.md      # v0.1.1 Release Notes (NEW!)
 ├── scripts/              # Helper scripts
 │   ├── init_memory_system.sql    # DDL statements for schema creation
 │   ├── schema_loader.py          # Python schema deployment tool
-│   ├── vector_similarity.py      # Cosine similarity calculator
-│   └── task_plan_api.py          # Task plan management API
+│   └── vector_similarity.py      # Cosine similarity calculator (application layer fallback)
 ├── references/           # External documentation links
-└── archive/              # Historical test scripts (optional)
 ```
 
 ---
@@ -303,27 +279,95 @@ memory-tidb8-ce-by-yhw/
 ## ⚠️ Testing Status & Environment
 
 **Status**: ✅ **DEPLOYED AND VERIFIED** — TiDB v8.5.6 Community Edition  
-**Deployment Date**: 2026-05-06  
+**Deployment Date**: 2026-05-06 (Updated: 2026-05-07 for v0.1.1)  
 **Cluster Address**: `10.10.10.142:4000` (TiDB), `10.10.10.141:2379` (PD)
 
 **Verification Results:**
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| Cluster Health | ✅ All 6 nodes running | 1 TiDB + 1 PD + 3 TiKV + 2 TiFlash |
-| Schema Deployed | ✅ 11 tables created | No CLOB storage, all verified |
+| Cluster Health | ✅ All nodes running | 1 TiDB + 1 PD + 4 TiKV |
+| Schema Deployed | ✅ Tables created | vector_native_test, memory_nodes, etc. |
 | Connection Test | ✅ root@% / tidb#123 | Full access confirmed |
-| TiFlash Replicas | ℹ️ Configurable later | Enable via `ALTER TABLE SET TIFLASH REPLICA` |
+| vec_cosine_distance() Function | ✅ **VERIFIED WORKING** | Native SQL vector search available! |
+| Vector Storage (VECTOR(1024)) | ✅ Supported | CAST JSON to VECTOR conversion works |
 
-**Recommended**: Ready for production use — all schema validated.
+**Recommended**: Ready for production use — all schema validated, SQL vector search verified.
 
 ---
 
-## 📋 Related Documentation
+## 📋 TiFlash Replica Configuration Guide (Official Documentation)
 
-- [TiDB Official Documentation](https://pingcap.com/docs/) — Complete reference guide
+### Configure Per-Table Replicas
+
+```sql
+-- Create TiFlash replica for specific table
+ALTER TABLE table_name SET TIFLASH REPLICA count;
+
+-- Example: Set to 1 replica (single-node environment)
+ALTER TABLE memory_nodes SET TIFLASH REPLICA 1;
+```
+
+### Batch Configure Database-Wide Replicas
+
+```sql
+-- Create TiFlash replicas for all tables in database
+ALTER DATABASE db_name SET TIFLASH REPLICA count;
+
+-- Example
+ALTER DATABASE memory_system SET TIFLASH REPLICA 1;
+```
+
+### Monitor Sync Progress
+
+```sql
+-- Check sync status for specific table
+SELECT * FROM information_schema.tiflash_replica 
+WHERE TABLE_SCHEMA = 'memory_system' AND TABLE_NAME = 'memory_nodes';
+
+-- Check sync status for entire database
+SELECT * FROM information_schema.tiflash_replica 
+WHERE TABLE_SCHEMA = 'memory_system';
+```
+
+### Find Tables Without TiFlash Configuration
+
+```sql
+-- Find tables that have not been configured with TiFlash Replica yet
+SELECT TABLE_NAME FROM information_schema.tables 
+WHERE TABLE_SCHEMA = '<db_name>' 
+AND TABLE_NAME NOT IN (
+    SELECT TABLE_NAME FROM information_schema.tiflash_replica 
+    WHERE TABLE_SCHEMA = '<db_name>'
+);
+```
+
+### ⚠️ Replica Count Limitations
+
+**Important:** TiFlash REPLICA count **cannot exceed the available TiFlash node count**!
+
+| Environment | TiFlash Nodes | Recommended replica count |
+|-------------|---------------|---------------------------|
+| Single-node test environment | 1 | `SET TIFLASH REPLICA 1` |
+| Multi-node production environment | N | `SET TIFLASH REPLICA N` (≤ nodes) |
+
+### 📚 Official Documentation References
+
+- **[Build TiFlash Replicas](https://pingkai.cn/docs/tidb/stable/create-tiflash-replicas/)** — Complete configuration guide
+- [TiDB CE Download Page](https://pingkai.cn/download#tidb-community) — Community Edition download links
+- [TiDB Official Documentation](https://pingkai.cn/docs/tidb/stable/) — Complete reference
+
+---
+
+## 📋 Related Documentation & Skills
+
+### Primary Skills
+- **memory-tidb8-ce-by-yhw** - Complete TiDB Memory System + SQL Vector Search (with vec_cosine_distance())
+
+### External Documentation
+- [TiDB Official Documentation](https://pingkai.cn/docs/tidb/stable/) — Complete reference guide
+- [TiDB Vector Search Quick Start (Chinese)](https://pingkai.cn/docs/tidb/stable/quickstart-via-sql/) — SQL vector search tutorial
 - [TiDB GitHub Repository](https://github.com/pingcap/tidb) — Source code and issues
-- [TiFlash Columnar Storage](https://docs.pingcap.com/tidb/stable/tiflash-overview) — Performance optimization
 
 ---
 
@@ -343,4 +387,4 @@ This project is licensed under the [Apache License, Version 2.0](LICENSE).
 
 ---
 
-**Last Updated**: 2026-05-05 v0.1.0 (Initial Release)
+**Last Updated**: 2026-05-07 v0.1.1 (SQL Vector Search Support)

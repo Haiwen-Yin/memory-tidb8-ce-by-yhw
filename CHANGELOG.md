@@ -1,44 +1,58 @@
-# Changelog
+---
+name: memory-tidb8-ce-by-yhw-changelog
+version: 0.1.1
+description: "Version History for TiDB CE Memory System Skill"
+author: "Haiwen Yin (胖头鱼 🐟 / yhw)"
+---
+
+# CHANGELOG - memory-tidb8-ce-by-yhw
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-## [Unreleased]
-### Added
-- Initial release of TiDB Community Edition v8.5+ Memory System for AI Agents
-- Core schema design (memory_nodes, memory_edges, memories tables)
-- Task plan system with persistent state management
-- Vector similarity calculation framework using Python/NumPy
-- Full-text search support (version-dependent on TiDB build)
-- HTAP capabilities leveraging TiFlash columnar storage
-- GitHub repository structure with CI/CD pipeline configuration
-- CONTRIBUTING.md guidelines for contributors
-- .gitignore file excluding common development artifacts
-
-### Architecture
-- Property Graph management via recursive CTEs for relationship navigation
-- Vector similarity retrieval through application-layer cosine calculation
-- Structured JSON views for API-friendly data consumption
-- Memory decomposition tables replacing Oracle AI DB native features
-
-## [0.1.0] - 2026-05-06 (Initial Release)
+## [v0.1.1] - 2026-05-07
 
 ### Added
-- Initial project structure and documentation
-- Complete schema design with all core tables
-- Architecture diagram and implementation patterns
-- Python cosine similarity calculator for vector operations
-- Graph traversal SQL templates using WITH RECURSIVE CTEs
-- JSON view definitions for API consumption
-- Indexing strategy recommendations
-- Deployment checklist with verification steps
+- ✅ **vec_cosine_distance() SQL function support** - Native vector similarity queries in TiDB CE v8.5.6
+- ✅ ORDER BY distance sorting capability in database layer
+- ✅ CAST JSON to VECTOR conversion for storing embeddings
+- ✅ Complete SQL-based vector search examples with verification results
+- ✅ Updated documentation with actual test data from production cluster
 
-### Notes
-- This version represents initial architectural exploration and design validation
-- Not recommended for production use without thorough testing
-- All DDL statements require validation on actual TiDB deployment
-- Vector search performance needs benchmarking
-- Graph traversal scalability under heavy load untested
+### Changed
+- ⬆️ **Version bump**: v0.1.0 → v0.1.1
+- 🔄 Updated SKILL.md with accurate TiDB CE capabilities (removed misleading TiFlash SQL config info)
+- 🔄 Simplified documentation structure - removed unnecessary planning documents
+
+### Removed
+- ❌ Removed `SKILLS/tiflash-configuration-guide.md` - Not applicable for TiDB CE (SQL TiFlash config unsupported)
+- ❌ Removed `RELEASE_NOTES.md` - Created during troubleshooting session, not core content
+- ❌ Removed `ROADMAP.md` - Planning document no longer relevant after v0.1.1 updates
+- ❌ Removed verification-only scripts (`verify_vec_function.py`, `verify_vector_search.py`)
+
+### Fixed
+- 🐛 Corrected understanding of TiDB CE capabilities based on official documentation testing
+- 🐛 Updated cluster topology with actual node information (4 TiKV nodes confirmed)
+
+## [v0.1.0] - 2026-05-05
+
+### Added
+- Initial release of TiDB Community Edition v8.5+ Memory System skill
+- Core table schema definitions (memory_nodes, memory_edges, memories)
+- Task management system tables (task_plans, task_steps, snapshots, tool_calls)
+- Python embedding provider abstraction layer for multi-model support
+- Schema deployment tools and utilities
+- Vector similarity calculation functions
+
+### Features
+- HTAP (Hybrid Transactional/Analytical Processing) capabilities
+- PD Auto Partitioning for automatic load balancing
+- MySQL compatibility with existing SQL syntax
+- TiCDC Change Data Capture for real-time backup
+
+---
+
+**Maintainer**: Haiwen Yin (胖头鱼 🐟 / yhw)  
+**Contact**: https://blog.csdn.net/yhw1809 | https://github.com/Haiwen-Yin

@@ -2,9 +2,9 @@
 
 ## TiDB Community Edition Resources
 
-- [TiDB CE Download](https://pingkai.cn/docs/tidb/stable/) — Community edition downloads
-- [TiDB Documentation](https://docs.pingcap.com/zh/tidb/v8.5/) — Official documentation
-- [TiFlash Overview](https://docs.pingcap.com/zh/tidb/v8.5/tiflash-overview) — Columnar storage features
+- [TiDB CE Download](https://pingkai.cn/download#tidb-community) — Community Edition download links
+- [TiDB Documentation](https://pingkai.cn/docs/tidb/stable/) — Official documentation entry point
+- [TiFlash Overview](https://pingkai.cn/docs/tidb/stable/tiflash-overview) — Columnar storage features
 
 ## Related Projects and Standards
 
@@ -14,5 +14,5 @@
 
 ## Deployment Tools
 
-- [tiup](https://docs.pingcap.com/tidb/v8.5/deploy-tiup-local-cluster) — TiDB cluster management tool
+- [tiup](https://pingkai.cn/docs/tidb/stable/) — TiDB cluster management tool
 - [Docker Compose](https://docs.docker.com/compose/) — Container orchestration for testing
