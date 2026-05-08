@@ -1,6 +1,6 @@
 ---
 name: memory-tidb8-ce-by-yhw-changelog
-version: 0.1.1
+version: 0.1.2
 description: "Version History for TiDB CE Memory System Skill"
 author: "Haiwen Yin (胖头鱼 🐟 / yhw)"
 ---
@@ -11,6 +11,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [v0.1.2] - 2026-05-08 (Multi-Agent Architecture Edition)
+
+### Added
+- ✅ **Complete Multi-Agent Architecture Support** — Dynamic agent orchestration framework
+- ✅ `agent_registry` table — Agent registration with role classification and status tracking
+- ✅ `agent_session` table — Execution session lifecycle management with state transitions
+- ✅ `collaboration_request` table — Cross-agent task delegation and result aggregation
+- ✅ `shared_context` table — Inter-agent communication through shared key-value stores
+- ✅ `coordination_log` table — Activity audit trail for all coordination actions
+- ✅ `agent_cache` table — Performance caching for frequently accessed data
+- ✅ `agent_metrics` table — System monitoring and performance tracking
+- ✅ Python API classes: AgentRegistryAPI, SessionAPI, CollaborationAPI, SharedContextAPI, MonitoringAPI
+- ✅ Multi-Agent schema DDL (`scripts/multi_agent_schema.sql`) with complete table definitions
+
+### Changed
+- ⬆️ **Version bump**: v0.1.1 → v0.1.2 (Multi-Agent Architecture Edition)
+- 🔄 Updated SKILL.md with comprehensive Multi-Agent documentation and architecture diagrams
+- 🔄 Enhanced README.md with Multi-Agent usage examples and feature overview
+- 🔄 Added agent role classifications: COORDINATOR, SPECIALIST, WORKER, EVALUATOR
+
+### New Files
+- `scripts/multi_agent_schema.sql` — Multi-Agent table definitions (6.4KB)
+- `scripts/multi_agent_api.py` — Python API for multi-agent orchestration (14.7KB)
+- `RELEASE_NOTES.md` — v0.1.2 release documentation
+
+---
 
 ## [v0.1.1] - 2026-05-07
 

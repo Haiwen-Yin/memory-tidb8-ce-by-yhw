@@ -1,6 +1,7 @@
-# TiDB Community Edition v8.5+ Memory System
+# TiDB Community Edition v8.5+ Memory System with Multi-Agent Architecture
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-v0.1.2-green.svg)](VERSION)
 
 ## 🎯 Overview
 
@@ -11,10 +12,13 @@ A universal memory system for AI Agents built on **TiDB Community Edition 8.5+**
 - ✅ Knowledge graph relationship management via recursive CTEs
 - ✅ Full-text search capabilities
 - ✅ Task plan system with persistent state management
+- ✅ **Multi-Agent Architecture** (v0.1.2+) — Agent orchestration, collaboration, and coordination
 
 ---
 
 ## Architecture
+
+### Core Memory System
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -27,6 +31,24 @@ A universal memory system for AI Agents built on **TiDB Community Edition 8.5+**
 │  TiDB Server ↔ PD (Metadata) → TiKV (Row Store)             │
 │                          ↕                                  │
 │                    TiFlash (Columnar Storage)               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Multi-Agent Architecture (v0.1.2+)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   Agent Orchestrator Layer                  │
+│  ┌───────────┐    ┌──────────┐    ┌──────────┐              │
+│  │Coordinator│ ←→ │Specialist│ ←→ │ Worker   │              │
+│  │ (01)      │    │ (DB-01)  │    │ (Task-02)│              │
+│  └─────┬─────┘    └────┬─────┘    └────┬─────┘              │
+│        │               │               │                    │
+│   ┌────▼───────────────▼───────────────▼────┐               │
+│   │         Collaboration & State Layer     │               │
+│   │  collaboration_requests | shared_context│               │
+│   │  coordination_log     | agent_cache     │               │
+│   └─────────────────────────────────────────┘               │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -80,11 +102,19 @@ Use the DDL statements from SKILL.md to create all tables and indexes.
 
 ## Features
 
+### Core Memory System
 - **Vector Similarity Search**: Application-layer cosine similarity with TiFlash acceleration
 - **Knowledge Graph Management**: Property graph relationships via recursive CTEs
 - **Full-text Search**: Native text indexing capabilities
 - **Task Plan System**: Persistent task execution with state management
 - **Real-time Analytics**: HTAP enables simultaneous OLTP and OLAP queries
+
+### Multi-Agent Architecture (v0.1.2+)
+- **Agent Registry**: Dynamic agent registration with role classification (coordinator, specialist, worker, evaluator)
+- **Session Management**: Agent execution lifecycle tracking with state transitions
+- **Collaboration Framework**: Cross-agent task delegation and result aggregation
+- **Shared Context**: Inter-agent communication through shared key-value stores
+- **Monitoring & Metrics**: Performance tracking for all registered agents
 
 ---
 
@@ -185,6 +215,112 @@ apply_schema(dry_run=False)
 
 ---
 
+## Multi-Agent Architecture Usage (v0.1.2+)
+
+### Agent Registration
+
+```python
+from scripts.multi_agent_api import (
+    AgentRegistryAPI,
+    AgentConfig,
+    AgentRole
+)
+
+registry = AgentRegistryAPI()
+
+# Register a coordinator agent
+coordinator_config = AgentConfig(
+    agent_id="coordinator-01",
+    name="Task Orchestrator",
+    role=AgentRole.COORDINATOR,
+    description="Main task coordination agent"
+)
+registry.register_agent(coordinator_config)
+
+# Register a specialist agent
+specialist_config = AgentConfig(
+    agent_id="specialist-db-01",
+    name="Database Specialist",
+    role=AgentRole.SPECIALIST,
+    capabilities=["schema_analysis", "query_optimization"]
+)
+registry.register_agent(specialist_config)
+
+# List all agents
+all_agents = registry.list_agents()
+```
+
+### Session Management
+
+```python
+from scripts.multi_agent_api import SessionAPI, SessionState
+
+session_api = SessionAPI()
+
+# Create a new session
+task_context = {"objective": "Optimize database schema"}
+session_api.create_session("session-001", coordinator.agent_id, task_context)
+
+# Update session state
+session_api.update_session_state("session-001", SessionState.ACTIVE)
+```
+
+### Collaboration and Task Delegation
+
+```python
+from scripts.multi_agent_api import CollaborationAPI, CollaborationRequest
+
+collaboration_api = CollaborationAPI()
+
+# Submit a collaboration request
+request = CollaborationRequest(
+    request_id="collab-001",
+    initiator_agent_id=coordinator.agent_id,
+    target_agents=[specialist_config.agent_id],
+    task_description="Analyze and optimize database schema for performance"
+)
+
+request_id = collaboration_api.submit_request(request)
+
+# Assign to specific agent (optional)
+collaboration_api.assign_request(request_id, specialist_config.agent_id)
+```
+
+### Shared Context Access
+
+```python
+from scripts.multi_agent_api import SharedContextAPI
+
+context_api = SharedContextAPI()
+
+# Store shared context for other agents
+context_api.set_context("db_schema_status", {
+    "status": "ready",
+    "optimization_suggestions": ["add_index", "refactor_table"]
+}, ttl_seconds=3600)  # 1 hour TTL
+
+# Retrieve shared context from another agent
+shared_data = context_api.get_context("db_schema_status")
+```
+
+### System Monitoring
+
+```python
+from scripts.multi_agent_api import MonitoringAPI
+
+monitoring_api = MonitoringAPI()
+
+# Record metrics for an agent
+monitoring_api.record_metric(specialist_config.agent_id, "tasks_completed", 42)
+monitoring_api.record_metric(specialist_config.agent_id, "error_rate", 0.05)
+
+# Check system health
+health_status = monitoring_api.get_system_health()
+print(f"Active agents: {health_status['active_agents']}")
+```
+
+---
+
 ## Testing Status
 
 This system is in **initial development phase**. Key components need validation:
@@ -196,6 +332,7 @@ This system is in **initial development phase**. Key components need validation:
 | Recursive CTEs | ⚠️ Needs real data | Graph traversal patterns documented |
 | Vector search (app-layer) | ⚠️ Needs benchmarking | Requires TiDB deployment with TiFlash |
 | HTAP performance | 🔬 To be measured | TiFlash acceleration benefits TBD |
+| Multi-Agent Architecture | 📝 Ready for integration testing | v0.1.2 release candidate |
 
 ---
 
@@ -208,7 +345,15 @@ memory-tidb8-ce-by-yhw/
 ├── LICENSE               # Apache License 2.0
 ├── NOTICE                # Copyright notice
 ├── CHANGELOG.md          # Version history
+├── VERSION               # Current version
 ├── scripts/              # Helper scripts
+│   ├── init_memory_system.sql    # Core schema DDL
+│   ├── multi_agent_schema.sql    # Multi-Agent tables (v0.1.2+)
+│   ├── schema_loader.py          # Schema deployment utility
+│   ├── task_plan_api.py          # Task plan management API
+│   ├── vector_similarity.py      # Vector similarity calculations
+│   ├── multi_agent_api.py        # Multi-Agent orchestration API (v0.1.2+)
+│   └── ...                       # Additional utilities
 ├── references/           # External references
 └── *.md                  # Test reports, etc.
 ```
@@ -239,4 +384,4 @@ This project is licensed under the [Apache License, Version 2.0](LICENSE).
 
 ---
 
-**Last Updated**: 2026-05-05 v0.1.0 (Initial Release)
+**Last Updated**: 2026-05-08 v0.1.2 (Multi-Agent Architecture Edition)

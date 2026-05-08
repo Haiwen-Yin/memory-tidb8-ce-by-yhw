@@ -17,7 +17,7 @@ class TaskPlanAPI:
     """Manage task plans in TiDB memory system."""
     
     def __init__(self, host='127.0.0.1', port=4000, user='root@memcluster', 
-                 password='', database='memory_cluster'):
+                 password='', database='memory_system'):
         self.host = os.environ.get('TIDB_HOST', host)
         self.port = int(os.environ.get('TIDB_PORT', port))
         self.user = os.environ.get('TIDB_USER', user)
