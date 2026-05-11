@@ -1,18 +1,18 @@
 ---
 name: memory-tidb8-ce-by-yhw
-version: 0.1.2
-description: "TiDB Community Edition v8.5+ AI Agent Memory System - Multi-Agent Architecture Support"
+version: v1.0.0
+description: "TiDB Community Edition v8.5+ AI Agent Memory System - Knowledge Base System Production Release"
 author: "Haiwen Yin (胖头鱼 🐟 / yhw)"
 license: "Apache License, Version 2.0"
 created: "2026-05-05"
-updated: "2026-05-08"
+updated: "2026-05-11"
 ---
 
 # memory-tidb8-ce-by-yhw — TiDB Community Edition v8.5+ AI Agent Memory System
-
-**Version**: v0.1.2 (Multi-Agent Architecture Edition)  
+# memory-tidb8-ce-by-yhw — TiDB Community Edition v8.5+ AI Agent Memory System
+**Version**: v1.0.0 (Knowledge Base System Production Release)  
 **Created**: 2026-05-05  
-**Updated**: 2026-05-08
+**Updated**: 2026-05-11
 **Author**: Haiwen Yin (胖头鱼 🐟 / yhw)  
 **License**: Apache License, Version 2.0
 
@@ -20,17 +20,18 @@ updated: "2026-05-08"
 
 ## 🎯 Overview
 
-A universal memory system for AI Agents built on **TiDB Community Edition v8.5+**, featuring native SQL vector search capabilities with `vec_cosine_distance()` function for semantic similarity queries and knowledge graph management.
+A universal memory system for AI Agents built on **TiDB Community Edition v8.5+**, featuring native SQL vector search capabilities with `vec_cosine_distance()` function for semantic similarity queries, knowledge graph management, and complete Knowledge Base System.
 
-### Key Features (v0.1.2 Multi-Agent Update)
+### Key Features (v1.0.0 Knowledge Base System)
 
-- ✅ Native VECTOR(1024) type support
-- ✅ **SQL-based vec_cosine_distance() function** - Direct vector similarity queries in SQL
-- ✅ ORDER BY distance sorting in database layer
-- ✅ CAST JSON to VECTOR conversion for storage
+- ✅ **Knowledge Base System** - Complete knowledge management (concepts, relationships, version control, validation, audit trail)
+- ✅ **Hybrid Search** - Text search + semantic search with vector similarity
+- ✅ **Knowledge Graph** - Graph-based relationship (IS_A/PART_OF/CAUSES/ENABLES/CONTRADICTS/SUPPORTS)
+- ✅ **Version Control** - Complete version history for knowledge concepts
+- ✅ **Native VECTOR(1024) type support**
 - ✅ HTAP (Hybrid Transactional/Analytical Processing) capabilities
 - ✅ PD Auto Partitioning for automatic load balancing
-- ✅ **Multi-Agent Architecture** — Agent orchestration, collaboration framework, shared context
+- ✅ **Multi-Agent Architecture** — Agent orchestration, collaboration framework, shared context (v0.1.2+)
 
 ---
 
@@ -39,21 +40,21 @@ A universal memory system for AI Agents built on **TiDB Community Edition v8.5+*
 ### Core Memory System
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│                    Application Layer (Python/Java)         │
-│  Embedding Generation → Text Vector Conversion             │
-│  SQL Query Building with vec_cosine_distance()             │
-├────────────────────────────────────────────────────────────┤
-│                    TiDB Cluster (v8.5+)                    │
-│                                                            │
-│  ┌──────────┐    ┌──────────┐    ┌───────────┐             │
-│  │ TiDB Svr │◄──►│ PD       │◄──►│ TiKV      │             │
-│  │(SQL/Calc)│    │(Metadata)│    │(Row Store)│             │
-│  └──────────┘    └──────────┘    └───────────┘             │
-│                                                            │
-│  vec_cosine_distance() SQL Function                        │
-│  → Native Vector Similarity Query                          │
-└────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    Application Layer (Python/Java)          │
+│  Embedding Generation → Text Vector Conversion              │
+│  SQL Query Building with vec_cosine_distance()              │
+├─────────────────────────────────────────────────────────────┤
+│                    TiDB Cluster (v8.5+)                     │
+│                                                             │
+│  ┌──────────┐    ┌──────────┐    ┌───────────┐              │
+│  │ TiDB Svr │◄──►│ PD       │◄──►│ TiKV      │              │
+│  │(SQL/Calc)│    │(Metadata)│    │(Row Store)│              │
+│  └──────────┘    └──────────┘    └───────────┘              │
+│                                                             │
+│  vec_cosine_distance() SQL Function                         │
+│  → Native Vector Similarity Query                           │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ### Multi-Agent Architecture (v0.1.2+)
@@ -62,7 +63,7 @@ A universal memory system for AI Agents built on **TiDB Community Edition v8.5+*
 ┌─────────────────────────────────────────────────────────────┐
 │                   Agent Orchestrator Layer                  │
 │  ┌───────────┐    ┌──────────┐    ┌──────────┐              │
-│  │Coordinator│ ←→ │Specialist│ ←→ │ Worker   │              │
+│  │Coordinator│ ←→ │Specialist│ ←→ │Worker    │              │
 │  │ (01)      │    │ (DB-01)  │    │ (Task-02)│              │
 │  └─────┬─────┘    └────┬─────┘    └────┬─────┘              │
 │        │               │               │                    │
@@ -77,8 +78,65 @@ A universal memory system for AI Agents built on **TiDB Community Edition v8.5+*
 ---
 
 ## 📋 Schema Design
+## 📋 Schema Design
 
-### Core Memory Tables (Original)
+### Knowledge Base System (v1.0.0+)
+
+#### knowledge_concepts — Knowledge Concepts Table
+```sql
+CREATE TABLE IF NOT EXISTS knowledge_concepts (
+    CONCEPT_ID BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT 'Knowledge concept unique identifier',
+    CONCEPT_NAME VARCHAR(255) NOT NULL COMMENT 'Concept name/title',
+    CONCEPT_TYPE VARCHAR(50) NOT NULL COMMENT 'Type: FACT/RULE/PATTERN/EXPERIENCE/PRINCIPLE',
+    CATEGORY VARCHAR(100) COMMENT 'Concept category for grouping',
+    DESCRIPTION TEXT COMMENT 'Detailed concept description',
+    CONTENT TEXT COMMENT 'Full concept content',
+    SOURCE_TYPE VARCHAR(50) COMMENT 'Source: MANUAL/EXPERIENCE_DISTILLATION/IMPORTED',
+    CONFIDENCE DECIMAL(3,2) DEFAULT 0.80 COMMENT 'Confidence score (0.00-1.00)',
+    VALIDATION_STATUS VARCHAR(30) DEFAULT 'PENDING' COMMENT 'PENDING/VALIDATED/REJECTED',
+    EMBEDDING TEXT COMMENT 'Vector embedding (JSON array)',
+    TAGS TEXT COMMENT 'Tags (JSON array)',
+    METADATA TEXT COMMENT 'Additional metadata (JSON)',
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    VALIDATED_AT TIMESTAMP NULL,
+    DEPRECATED_AT TIMESTAMP NULL,
+    VERSION INT DEFAULT 1,
+    IS_CURRENT VARCHAR(1) DEFAULT 'Y',
+    
+    INDEX idx_concept_name (CONCEPT_NAME),
+    INDEX idx_concept_type (CONCEPT_TYPE),
+    INDEX idx_category (CATEGORY),
+    INDEX idx_validation_status (VALIDATION_STATUS),
+    INDEX idx_confidence (CONFIDENCE)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+#### knowledge_graph — Knowledge Relationship Table
+```sql
+CREATE TABLE IF NOT EXISTS knowledge_graph (
+    RELATIONSHIP_ID BIGINT PRIMARY KEY AUTO_INCREMENT,
+    SOURCE_CONCEPT_ID BIGINT NOT NULL,
+    TARGET_CONCEPT_ID BIGINT NOT NULL,
+    RELATIONSHIP_TYPE VARCHAR(50) NOT NULL COMMENT 'IS_A/PART_OF/CAUSES/ENABLES/CONTRADICTS/SUPPORTS',
+    RELATIONSHIP_STRENGTH DECIMAL(3,2) DEFAULT 0.90 COMMENT 'Relationship strength (0.00-1.00)',
+    PROPERTIES TEXT COMMENT 'Additional properties (JSON)',
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    SOURCE_TYPE VARCHAR(50),
+    CONFIDENCE DECIMAL(3,2) DEFAULT 0.80,
+    
+    INDEX idx_source (SOURCE_CONCEPT_ID),
+    INDEX idx_target (TARGET_CONCEPT_ID),
+    INDEX idx_relationship_type (RELATIONSHIP_TYPE),
+    INDEX idx_strength (RELATIONSHIP_STRENGTH),
+    
+    FOREIGN KEY (SOURCE_CONCEPT_ID) REFERENCES knowledge_concepts(CONCEPT_ID) ON DELETE CASCADE,
+    FOREIGN KEY (TARGET_CONCEPT_ID) REFERENCES knowledge_concepts(CONCEPT_ID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+### Core Memory Tables (Original v0.1.2)
 
 #### memory_nodes — Agent Memory Nodes
 
@@ -556,4 +614,4 @@ This project is licensed under the [Apache License, Version 2.0](LICENSE).
 
 ---
 
-**Last Updated**: 2026-05-08 v0.1.2 (Multi-Agent Architecture Edition)
+**Last Updated**: 2026-05-11 v1.0.0 (Knowledge Base System Production Release)
